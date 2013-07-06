@@ -40,5 +40,41 @@ namespace hue {
     }
     return ss.str();
   }
+
+  string http_post(string url, string body, CURL* ctx) {
+    string response;
+    curl_easy_setopt(ctx, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(ctx, CURLOPT_POSTFIELDS, body.c_str());
+    curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, curl_string_writer);
+    curl_easy_setopt(ctx, CURLOPT_WRITEDATA, (void *)&response);
+    if (curl_easy_perform(ctx) != CURLE_OK) {
+      throw hue_exception("HTTP POST failed.");
+    }
+    return response;
+  }
+
+  string http_get(string url, CURL* ctx) {
+    string response;
+    curl_easy_setopt(ctx, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, curl_string_writer);
+    curl_easy_setopt(ctx, CURLOPT_WRITEDATA, (void *)&response);
+    if (curl_easy_perform(ctx) != CURLE_OK) {
+      throw hue_exception("HTTP GET failed.");
+    }
+    return response;
+  }
+
+  int curl_string_writer(char *data, size_t size, size_t nmemb, std::string *out)
+  {
+    int result = 0;
+    if(out)
+    {
+      out->append(data, size * nmemb);
+      result = size * nmemb;
+    }
+    return result;
+  }
 }
 

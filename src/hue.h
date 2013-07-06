@@ -20,6 +20,10 @@ namespace hue {
     hub_addr str_to_addr(string ip);
     string addr_to_string(hub_addr ip);
 
+    string http_post(string url, string body, CURL* ctx);
+    string http_get(string url, CURL* ctx);
+    int curl_string_writer(char *data, size_t size, size_t nmemb, std::string *out);
+
     class hue_exception : public std::exception {
     public:
         hue_exception(string what) : m_what(what) {}
@@ -29,6 +33,7 @@ namespace hue {
         string m_what;
     };
 };
+
 
 #endif
 

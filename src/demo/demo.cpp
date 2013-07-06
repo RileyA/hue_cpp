@@ -2,6 +2,9 @@
 #include "hue.h"
 #include "hub.h"
 
+const static char* DEVICE = "Linux PC"; // arbitrary, but true of my testing setup
+const static char* USERNAME = "huecppdebug";
+
 int main(int argc, char** argv) {
 
   std::cout << "Discovering hubs...\n";
@@ -23,6 +26,8 @@ int main(int argc, char** argv) {
   std::cout << "Enter hub index to use: ";
   size_t hub_idx = 0;
   std::cin >> hub_idx;
+  std::cin.clear();
+  std::cin.ignore(1);
 
   if (hub_idx > addrs.size() - 1) {
     std::cout << "Invalid hub index!\n";
@@ -36,7 +41,8 @@ int main(int argc, char** argv) {
 
   std::cout << "Using hub at: " << hue::addr_to_string(address) << "\n";
 
-  // ...
+  // setup our hub...
+  hue::hub h = hue::hub(address, DEVICE, USERNAME);
 
   return 0;
 }
