@@ -1,6 +1,8 @@
 #ifndef hub_H
 #define hub_H
 
+#include "hue.h"
+
 namespace hue {
   
   /** Represents a single Hue hub, allowing query and control of the
@@ -11,7 +13,7 @@ namespace hue {
     /** Static function that discovers all hue bridges on your local
      *  network
      *    @return A list of IP addresses */
-    static std::list<hue_addr> Discover();
+    static std::list<hub_addr> Discover();
 
     hub(string ip);
     hub(hub_addr ip);
@@ -19,7 +21,7 @@ namespace hue {
 
   private:
 
-    hue_addr ip;
+    hub_addr ip;
     
   };
 }

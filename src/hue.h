@@ -6,6 +6,11 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
+#include <list>
+
+// 3rd party dependencies:
+#include <curl/curl.h>
+#include <jsoncpp/json/json.h>
 
 /** Establish the namespace, and typedef/declare some common things */
 namespace hue {
