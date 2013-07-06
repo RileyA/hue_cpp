@@ -1,44 +1,36 @@
-================
-Overview
-================
+# Overview
 
 This is a C++ interface for controlling Philips Hue color-changing lightbulbs.
 
-================
-Dependencies
-================
+# Dependencies
 
 cURL
 JsonCpp
 gtest (requires pthread)
 
-================
-How to build
-================
+# How to build
 
 Pretty standard cmake workflow:
 
 Generate makefiles:
 
-  cmake .
+    cmake .
 
 Build:
 
-  make
+    make
 
 Run tests
 
-  cd bin
-  ./tests
+    cd bin
+    ./tests
 
 Run demo
 
-  cd bin
-  ./demo
+    cd bin
+    ./demo
 
-================
-License (zlib)
-================
+# License (zlib)
 
 Copyright (c) 2013 Riley Adams
 
