@@ -4,9 +4,9 @@ This is a C++ interface for controlling Philips Hue color-changing lightbulbs.
 
 # Dependencies
 
-cURL
-JsonCpp
-gtest (requires pthread)
+* cURL
+* JsonCpp
+* gtest (requires pthread)
 
 # How to build
 
