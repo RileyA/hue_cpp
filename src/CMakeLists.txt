@@ -3,11 +3,13 @@ include_directories(.)
 set (SOURCE_FILES
     hub.cpp
     hue.cpp
+    light.cpp
     )
 
 set (HEADER_FILES
     hub.h
     hue.h
+    light.h
     )
 
 set (DEMO_SOURCE_FILES

@@ -44,6 +44,15 @@ int main(int argc, char** argv) {
   // setup our hub...
   hue::hub h = hue::hub(address, DEVICE, USERNAME);
 
+  //h.discover_new_lights();
+  std::cout << "Light search, last timestamp: " << h.query_new_lights().first << "\n";
+
+  /*try {
+    h.get_light(1)->set_name("Test");
+  } catch (hue::hue_exception e) {
+    std::cout << "e: " << e.what() << "\n";
+  }*/
+
   return 0;
 }
 

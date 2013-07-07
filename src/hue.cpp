@@ -44,6 +44,7 @@ namespace hue {
   string http_post(string url, string body, CURL* ctx) {
     string response;
     curl_easy_setopt(ctx, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(ctx, CURLOPT_PUT, 0);
     curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(ctx, CURLOPT_POSTFIELDS, body.c_str());
     curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, curl_string_writer);
@@ -54,9 +55,28 @@ namespace hue {
     return response;
   }
 
+  string http_put(string url, string body, CURL* ctx) {
+    string response;
+    curl_easy_setopt(ctx, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(ctx, CURLOPT_CUSTOMREQUEST, "PUT");
+    curl_easy_setopt(ctx, CURLOPT_POSTFIELDS, body.c_str());
+    curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, curl_string_writer);
+    curl_easy_setopt(ctx, CURLOPT_WRITEDATA, (void *)&response);
+    CURLcode res = curl_easy_perform(ctx);
+    if (res != CURLE_OK) {
+      throw hue_exception("HTTP PUT failed.");
+    }
+    curl_easy_setopt(ctx, CURLOPT_CUSTOMREQUEST, NULL);
+    return response;
+  }
+
   string http_get(string url, CURL* ctx) {
     string response;
     curl_easy_setopt(ctx, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(ctx, CURLOPT_PUT, 0);
+    curl_easy_setopt(ctx, CURLOPT_HTTPGET, 1);
+    curl_easy_setopt(ctx, CURLOPT_POST, 0);
     curl_easy_setopt(ctx, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(ctx, CURLOPT_WRITEFUNCTION, curl_string_writer);
     curl_easy_setopt(ctx, CURLOPT_WRITEDATA, (void *)&response);
@@ -64,6 +84,16 @@ namespace hue {
       throw hue_exception("HTTP GET failed.");
     }
     return response;
+  }
+
+  Json::Value parse_json(string json_str) {
+    Json::Value root;
+    Json::Reader reader;
+    bool parse_success = reader.parse(json_str, root);
+    if (!parse_success) {
+      throw hue_exception("Failed to parse JSON.");
+    }
+    return root;
   }
 
   int curl_string_writer(char *data, size_t size, size_t nmemb, std::string *out)
@@ -75,6 +105,22 @@ namespace hue {
       result = size * nmemb;
     }
     return result;
+  }
+
+  int curl_string_reader(void *ptr, size_t size, size_t nmemb, void *in) {
+    printf("derp?\n");
+    std::string* str = (std::string*)in;
+    size_t len = str->size();
+    if (len <= size * nmemb) {
+      memcpy(ptr, str->c_str(), len);
+      return len / nmemb;
+    } else if (len != 0) {
+      memcpy(ptr, str->c_str(), size * nmemb);
+      *str = str->substr(size * nmemb);
+      return size;
+    } else {
+      return 0;
+    }
   }
 }
 

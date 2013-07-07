@@ -29,6 +29,75 @@ namespace hue {
     curl_easy_cleanup(m_ctx);
   }
 
+  light* hub::get_light(int index) {
+    if (m_lights.count(index)) {
+      return m_lights[index];
+    } else {
+      return 0;
+    }
+  }
+
+  light* hub::get_light(string name) {
+    if (m_light_names.count(name)) {
+      return m_light_names[name];
+    } else {
+      return 0;
+    }
+  }
+
+  void hub::discover_new_lights() {
+    string url = "http://" + m_ip_str + "/api/" + m_username + "/lights";
+    string body = "";
+    string response = http_post(url, body, m_ctx);
+    Json::Value val = parse_json(response);
+    if (val.isArray() && val[0].isMember("success")) {
+    } else {
+      throw hue_exception("Failed to initiate light discovery.");
+    }
+  }
+
+  std::pair<string, std::list<light*> > hub::query_new_lights() {
+    std::list<light*> out;
+    string url = "http://" + m_ip_str + "/api/" + m_username + "/lights/new";
+    string response = http_get(url, m_ctx);
+    Json::Value val = parse_json(response);
+    std::string status = "unknown";
+
+    std::vector<string> members = val.getMemberNames();
+
+    for (int i = 0; i < members.size(); ++i) {
+      if (members[i] == "lastscan") {
+        status = val[members[i]].asString();
+      } else {
+        int idx = atoi(members[i].c_str());
+        init_light(idx, true);
+        if (m_lights.count(idx)) {
+          out.push_back(get_light(idx));
+        }
+      }
+    }
+
+    return std::make_pair(status, out);
+  }
+
+  void hub::refresh_light(int index) {
+    string url = "http://" + m_ip_str + "/api/" + m_username + "/lights/"
+      + to_str(index);
+    Json::Value attrs = parse_json(http_get(url, m_ctx));
+
+    if (attrs.isArray()) {
+      throw hue_exception(attrs[0]["error"]["description"].asString());
+    }
+
+    m_status["lights"][to_str(index)] = attrs;
+  }
+
+  void hub::refresh_state() {
+    if (!get_status()) {
+      throw hue_exception("Failed to refresh hub status.");
+    }
+  }
+
   bool hub::init_username(hub_auth_callback callback) {
     std::cout << "Authenticating with hub...\n";
     string url = "http://" + m_ip_str + "/api";
@@ -48,12 +117,7 @@ namespace hue {
         try {
           string result = http_post(url, request_str, m_ctx);
           // check for success
-          Json::Value root;
-          Json::Reader reader;
-          bool parse_success = reader.parse(result, root);
-          if (!parse_success || !root.isArray()) {
-            throw hue_exception("Bad response.");
-          }
+          Json::Value root = parse_json(result);
           if (root[0].isMember("error")) {
             if (root[0]["error"].isMember("type")
               && root[0]["error"]["type"].asInt() == 101) {
@@ -91,16 +155,41 @@ namespace hue {
     } catch (std::exception e) {
       return false;
     }
-    Json::Value root;
-    Json::Reader reader;
-    bool success = reader.parse(result, root);
+    Json::Value root = parse_json(result);
 
-    if (!success || root.isArray()) {
+    if (root.isArray()) {
       return false;
     }
 
     m_status = root;
+
+    // initial setup from status blob:
+    Json::Value lights = m_status["lights"];
+    std::vector<string> light_indices = lights.getMemberNames();
+
+    for (int i = 0; i < light_indices.size(); ++i) {
+      int idx = atoi(light_indices[i].c_str());
+      init_light(idx);
+    }
+
     return true;
+  }
+
+  void hub::init_light(int index, bool fetch) {
+    if (m_lights.count(index)) {
+      // already exists, we're done
+      return;
+    }
+
+    if (fetch) {
+      refresh_light(index);
+    }
+
+    light* l = new light(index, this);
+    m_lights[index] = l;
+    m_light_names[l->get_name()] = l;
+
+    std::cout << "Initializing light: " << index << " with name " << l->get_name() << "\n";
   }
 
   bool hub::await_hub_auth() {
@@ -137,14 +226,7 @@ namespace hue {
       throw hue_exception("Failed to reach discovery service. Check your internet connection.");
     }
 
-    // parse out the ips
-    Json::Value root;
-    Json::Reader reader;
-    bool success = reader.parse(response, root);
-
-    if (!success) {
-      throw hue_exception("Failed to parse discovery service response json.");
-    }
+    Json::Value root = parse_json(response);
 
     for (int i = 0; i < root.size(); ++i) {
       Json::Value hub = root[i];
