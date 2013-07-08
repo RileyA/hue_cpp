@@ -108,7 +108,6 @@ namespace hue {
   }
 
   int curl_string_reader(void *ptr, size_t size, size_t nmemb, void *in) {
-    printf("derp?\n");
     std::string* str = (std::string*)in;
     size_t len = str->size();
     if (len <= size * nmemb) {

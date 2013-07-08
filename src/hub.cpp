@@ -7,6 +7,7 @@ namespace hue {
     hub_auth_callback callback)
     : hub(str_to_addr(ip), device, username, callback) {
   }
+  //-------------------------------------------------------------------------
 
   hub::hub(hub_addr ip, string device, string username,
    hub_auth_callback callback)
@@ -24,10 +25,12 @@ namespace hue {
     }
     std::cout << "Hub authentication success!\n";
   }
+  //-------------------------------------------------------------------------
 
   hub::~hub() {
     curl_easy_cleanup(m_ctx);
   }
+  //-------------------------------------------------------------------------
 
   light* hub::get_light(int index) {
     if (m_lights.count(index)) {
@@ -36,6 +39,7 @@ namespace hue {
       return 0;
     }
   }
+  //-------------------------------------------------------------------------
 
   light* hub::get_light(string name) {
     if (m_light_names.count(name)) {
@@ -44,6 +48,7 @@ namespace hue {
       return 0;
     }
   }
+  //-------------------------------------------------------------------------
 
   void hub::discover_new_lights() {
     string url = "http://" + m_ip_str + "/api/" + m_username + "/lights";
@@ -55,6 +60,7 @@ namespace hue {
       throw hue_exception("Failed to initiate light discovery.");
     }
   }
+  //-------------------------------------------------------------------------
 
   std::pair<string, std::list<light*> > hub::query_new_lights() {
     std::list<light*> out;
@@ -76,27 +82,27 @@ namespace hue {
         }
       }
     }
-
     return std::make_pair(status, out);
   }
+  //-------------------------------------------------------------------------
 
   void hub::refresh_light(int index) {
     string url = "http://" + m_ip_str + "/api/" + m_username + "/lights/"
       + to_str(index);
     Json::Value attrs = parse_json(http_get(url, m_ctx));
-
     if (attrs.isArray()) {
       throw hue_exception(attrs[0]["error"]["description"].asString());
     }
-
     m_status["lights"][to_str(index)] = attrs;
   }
+  //-------------------------------------------------------------------------
 
   void hub::refresh_state() {
     if (!get_status()) {
       throw hue_exception("Failed to refresh hub status.");
     }
   }
+  //-------------------------------------------------------------------------
 
   bool hub::init_username(hub_auth_callback callback) {
     std::cout << "Authenticating with hub...\n";
@@ -145,6 +151,7 @@ namespace hue {
       return true;
     }
   }
+  //-------------------------------------------------------------------------
 
   bool hub::get_status() {
     string url = "http://" + m_ip_str + "/api/" + m_username;
@@ -174,6 +181,7 @@ namespace hue {
 
     return true;
   }
+  //-------------------------------------------------------------------------
 
   void hub::init_light(int index, bool fetch) {
     if (m_lights.count(index)) {
@@ -191,6 +199,7 @@ namespace hue {
 
     std::cout << "Initializing light: " << index << " with name " << l->get_name() << "\n";
   }
+  //-------------------------------------------------------------------------
 
   bool hub::await_hub_auth() {
     // default is just to prompt and wait for the user to hit enter
@@ -199,6 +208,7 @@ namespace hue {
     std::cin.get();
     return true;
   }
+  //-------------------------------------------------------------------------
 
   std::list<hub_addr> hub::Discover() {
     std::list<hub_addr> out;
@@ -236,5 +246,6 @@ namespace hue {
 
     return out;
   }
+  //-------------------------------------------------------------------------
 }
 
